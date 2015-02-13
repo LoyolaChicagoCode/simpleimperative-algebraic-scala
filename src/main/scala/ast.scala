@@ -1,4 +1,4 @@
-package edu.luc.cs.cs372.simpleImperative
+package edu.luc.cs.cs372.simpleimperative
 
 /*
  * In this example, we represent simple imperative programs

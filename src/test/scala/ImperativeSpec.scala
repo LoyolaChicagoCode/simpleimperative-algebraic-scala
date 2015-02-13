@@ -1,4 +1,4 @@
-package edu.luc.cs.cs372.simpleImperative
+package edu.luc.cs.cs372.simpleimperative
 
 import scala.util.Success
 import org.scalatest.WordSpec

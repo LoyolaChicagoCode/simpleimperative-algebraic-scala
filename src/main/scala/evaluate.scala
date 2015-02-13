@@ -1,4 +1,4 @@
-package edu.luc.cs.cs372.simpleImperative
+package edu.luc.cs.cs372.simpleimperative
 
 import scala.util.{Failure, Success, Try}
 import ast._

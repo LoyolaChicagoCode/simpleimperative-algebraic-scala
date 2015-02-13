@@ -1,4 +1,4 @@
-name := "minic-scala"
+name := "simpleimperative-algebraic-scala"
 
 version := "0.1"
 
