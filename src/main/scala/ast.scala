@@ -29,7 +29,7 @@ object ast {
   case class Times[A](left: A, right: A) extends ExprF[A]
   case class Div[A](left: A, right: A) extends ExprF[A]
   case class Mod[A](left: A, right: A) extends ExprF[A]
-  case class Block[A](expressions: Seq[A]) extends ExprF[A]
+  case class Block[A](expressions: List[A]) extends ExprF[A]
   case class Cond[A](guard: A, thenBranch: A, elseBranch: A) extends ExprF[A]
   case class Loop[A](guard: A, body: A) extends ExprF[A]
   case class Assign[A](left: String, right: A) extends ExprF[A]
@@ -43,32 +43,69 @@ object ast {
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
       case e @ Constant(v) => e
       case e @ Variable(n) => e
-      case UMinus(r) => UMinus(f(r))
-      case Plus(l, r) => Plus(f(l), f(r))
-      case Minus(l, r) => Minus(f(l), f(r))
-      case Times(l, r) => Times(f(l), f(r))
-      case Div(l, r) => Div(f(l), f(r))
-      case Mod(l, r) => Mod(f(l), f(r))
-      case Block(es) => Block(es map f)
-      case Cond(g, t, e) => Cond(f(g), f(t), f(e))
-      case Loop(g, b) => Loop(f(g), f(b))
-      case Assign(l, r) => Assign(l, f(r))
+      case UMinus(r)       => UMinus(f(r))
+      case Plus(l, r)      => Plus(f(l), f(r))
+      case Minus(l, r)     => Minus(f(l), f(r))
+      case Times(l, r)     => Times(f(l), f(r))
+      case Div(l, r)       => Div(f(l), f(r))
+      case Mod(l, r)       => Mod(f(l), f(r))
+      case Block(es)       => Block(es map f)
+      case Cond(g, t, e)   => Cond(f(g), f(t), f(e))
+      case Loop(g, b)      => Loop(f(g), f(b))
+      case Assign(l, r)    => Assign(l, f(r))
     }
   }
 
   /**
    * Implicit value for declaring `ExprF` as an instance of
-   * typeclass `Equal` in scalaz using `Equal`'s structural equality.
+   * scalaz typeclass `Equal` using structural equality.
    * This enables `===` and `assert_===` on `ExprF` instances.
    */
-  implicit def ExprFEqual[A]: Equal[ExprF[A]] = Equal.equalA
+  private trait ExprFEqual[A] extends Equal[ExprF[A]] {
+    import scalaz.std.list._ // for Equal and Show instances
+    implicit def A: Equal[A]
+    override def equalIsNatural: Boolean = A.equalIsNatural
+    override def equal(a1: ExprF[A], a2: ExprF[A]) = (a1, a2) match {
+      case (Constant(v), Constant(w))     => v == w
+      case (Variable(m), Variable(n))     => m == n
+      case (UMinus(r), UMinus(t))         => A.equal(r, t)
+      case (Plus(l, r), Plus(s, t))       => A.equal(l, s) && A.equal(r, t)
+      case (Minus(l, r), Minus(s, t))     => A.equal(l, s) && A.equal(r, t) 
+      case (Times(l, r), Times(s, t))     => A.equal(l, s) && A.equal(r, t)
+      case (Div(l, r), Div(s, t))         => A.equal(l, s) && A.equal(r, t)
+      case (Mod(l, r), Mod(s, t))         => A.equal(l, s) && A.equal(r, t)
+      case (Block(r), Block(t))           => Equal[List[A]].equal(r, t)
+      case (Cond(g, t, e), Cond(h, u, f)) => A.equal(g, h) && A.equal(t, u) && A.equal(e, f)
+      case (Loop(g, b), Loop(h, c))       => A.equal(g, h) && A.equal(b, c)
+      case (Assign(l, r), Assign(s, t))   => (l == s) && A.equal(r, t)
+      case _ => false
+    }
+  }
+  implicit def exprFEqual[A](implicit A0: Equal[A]): Equal[ExprF[A]] = new ExprFEqual[A] {
+    implicit def A = A0
+  }
 
   /**
    * Implicit value for declaring `ExprF` as an instance of
-   * typeclass `Show` in scalaz using `Show`'s default method.
-   * This is required for `===` and `assert_===` to work on `ExprF` instances.
+   * scalaz typeclass `Show`. This enables `.show` on `ExprF` instances.
    */
-  implicit def ExprFShow[A]: Show[ExprF[A]] = Show.showFromToString
+  implicit def exprFShow[A](implicit A: Show[A]): Show[ExprF[A]] = new Show[ExprF[A]] {
+    import scalaz.std.list._ // for Equal and Show instances
+    override def show(e: ExprF[A]): scalaz.Cord = e match {
+      case Constant(v)   => "Constant(" ++ v.toString ++ ")"
+      case Variable(n)   => "Variable(" ++ n ++ ")"
+      case UMinus(r)     => "UMinus("   +: A.show(r) :+ ")"
+      case Plus(l, r)    => ("Plus("    +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
+      case Minus(l, r)   => ("Minus("   +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
+      case Times(l, r)   => ("Times("   +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
+      case Div(l, r)     => ("Div("     +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
+      case Mod(l, r)     => ("Mod("     +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
+      case Block(es)     => "Block("    +: Show[List[A]].show(es) :+ ")"
+      case Cond(g, t, e) => ("Cond("    +: A.show(g) :+ ",") ++ A.show(t) ++ ("," +: A.show(e) :+ ")")
+      case Loop(g, b)    => ("Loop("    +: A.show(g) :+ ",") ++ A.show(b) :+ ")"
+      case Assign(l, r)  => ("Assign("  ++ l ++ ",") +: A.show(r) :+ ")"
+    }
+  }
 
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
   type Expr = µ[ExprF]
@@ -83,7 +120,7 @@ object ast {
     def times(l: Expr, r: Expr): Expr = In(Times(l, r))
     def div(l: Expr, r: Expr): Expr = In(Div (l, r))
     def mod(l: Expr, r: Expr): Expr = In(Mod (l, r))
-    def block(es: Expr*): Expr = In(Block(es))
+    def block(es: Expr*): Expr = In(Block(es.toList))
     def cond(g: Expr, t: Expr, e: Expr): Expr = In(Cond(g, t, e))
     def loop(g: Expr, b: Expr): Expr = In(Loop(g, b))
     def assign(l: String, r: Expr): Expr = In(Assign(l, r))
