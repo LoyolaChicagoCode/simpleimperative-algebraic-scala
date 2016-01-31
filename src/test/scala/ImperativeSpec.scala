@@ -12,7 +12,7 @@ class ImperativeSpec extends WordSpec {
     "invoked with the given store" should {
 
       "not do anything unless triggered" in {
-        import scalamu.ToMuOps
+        import scalamu._
         val s = store()
         val s0 = store()
         e2.cata(evalAlgebra(s))

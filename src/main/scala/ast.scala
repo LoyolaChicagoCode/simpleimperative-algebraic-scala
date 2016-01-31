@@ -8,6 +8,7 @@ package edu.luc.cs.cs372.simpleimperative
 object ast {
 
   import scalaz.{Equal, Functor, Show}
+  import scalaz.std.list._
   import scalamu._
 
   /**
@@ -61,50 +62,20 @@ object ast {
    * scalaz typeclass `Equal` using structural equality.
    * This enables `===` and `assert_===` on `ExprF` instances.
    */
-  private trait ExprFEqual[A] extends Equal[ExprF[A]] {
-    import scalaz.std.list._ // for Equal and Show instances
-    implicit def A: Equal[A]
-    override def equalIsNatural: Boolean = A.equalIsNatural
-    override def equal(a1: ExprF[A], a2: ExprF[A]) = (a1, a2) match {
-      case (Constant(v), Constant(w))     => v == w
-      case (Variable(m), Variable(n))     => m == n
-      case (UMinus(r), UMinus(t))         => A.equal(r, t)
-      case (Plus(l, r), Plus(s, t))       => A.equal(l, s) && A.equal(r, t)
-      case (Minus(l, r), Minus(s, t))     => A.equal(l, s) && A.equal(r, t) 
-      case (Times(l, r), Times(s, t))     => A.equal(l, s) && A.equal(r, t)
-      case (Div(l, r), Div(s, t))         => A.equal(l, s) && A.equal(r, t)
-      case (Mod(l, r), Mod(s, t))         => A.equal(l, s) && A.equal(r, t)
-      case (Block(r), Block(t))           => Equal[List[A]].equal(r, t)
-      case (Cond(g, t, e), Cond(h, u, f)) => A.equal(g, h) && A.equal(t, u) && A.equal(e, f)
-      case (Loop(g, b), Loop(h, c))       => A.equal(g, h) && A.equal(b, c)
-      case (Assign(l, r), Assign(s, t))   => (l == s) && A.equal(r, t)
-      case _ => false
-    }
-  }
-  implicit def exprFEqual[A](implicit A0: Equal[A]): Equal[ExprF[A]] = new ExprFEqual[A] {
-    implicit def A = A0
-  }
-
-  /**
-   * Implicit value for declaring `ExprF` as an instance of
-   * scalaz typeclass `Show`. This enables `.show` on `ExprF` instances.
-   */
-  implicit def exprFShow[A](implicit A: Show[A]): Show[ExprF[A]] = new Show[ExprF[A]] {
-    import scalaz.std.list._ // for Equal and Show instances
-    override def show(e: ExprF[A]): scalaz.Cord = e match {
-      case Constant(v)   => "Constant(" ++ v.toString ++ ")"
-      case Variable(n)   => "Variable(" ++ n ++ ")"
-      case UMinus(r)     => "UMinus("   +: A.show(r) :+ ")"
-      case Plus(l, r)    => ("Plus("    +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
-      case Minus(l, r)   => ("Minus("   +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
-      case Times(l, r)   => ("Times("   +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
-      case Div(l, r)     => ("Div("     +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
-      case Mod(l, r)     => ("Mod("     +: A.show(l) :+ ",") ++ A.show(r) :+ ")"
-      case Block(es)     => "Block("    +: Show[List[A]].show(es) :+ ")"
-      case Cond(g, t, e) => ("Cond("    +: A.show(g) :+ ",") ++ A.show(t) ++ ("," +: A.show(e) :+ ")")
-      case Loop(g, b)    => ("Loop("    +: A.show(g) :+ ",") ++ A.show(b) :+ ")"
-      case Assign(l, r)  => ("Assign("  ++ l ++ ",") +: A.show(r) :+ ")"
-    }
+  implicit def exprFEqual[A](implicit A: Equal[A]): Equal[ExprF[A]] = Equal.equal {
+    case (Constant(v), Constant(w))     => v == w
+    case (Variable(m), Variable(n))     => m == n
+    case (UMinus(r), UMinus(t))         => A.equal(r, t)
+    case (Plus(l, r), Plus(s, t))       => A.equal(l, s) && A.equal(r, t)
+    case (Minus(l, r), Minus(s, t))     => A.equal(l, s) && A.equal(r, t) 
+    case (Times(l, r), Times(s, t))     => A.equal(l, s) && A.equal(r, t)
+    case (Div(l, r), Div(s, t))         => A.equal(l, s) && A.equal(r, t)
+    case (Mod(l, r), Mod(s, t))         => A.equal(l, s) && A.equal(r, t)
+    case (Block(r), Block(t))           => Equal[List[A]].equal(r, t)
+    case (Cond(g, t, e), Cond(h, u, f)) => A.equal(g, h) && A.equal(t, u) && A.equal(e, f)
+    case (Loop(g, b), Loop(h, c))       => A.equal(g, h) && A.equal(b, c)
+    case (Assign(l, r), Assign(s, t))   => (l == s) && A.equal(r, t)
+    case _ => false
   }
 
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
@@ -112,17 +83,17 @@ object ast {
 
   /** Factory for creating Expr instances. */
   object ExprFactory {
-    def constant(c: Int): Expr = In(Constant(c))
-    def variable(n: String): Expr = In(Variable(n))
-    def uminus(r: Expr): Expr = In(UMinus(r))
-    def plus(l: Expr, r: Expr): Expr = In(Plus (l, r))
-    def minus(l: Expr, r: Expr): Expr = In(Minus(l, r))
-    def times(l: Expr, r: Expr): Expr = In(Times(l, r))
-    def div(l: Expr, r: Expr): Expr = In(Div (l, r))
-    def mod(l: Expr, r: Expr): Expr = In(Mod (l, r))
-    def block(es: Expr*): Expr = In(Block(es.toList))
-    def cond(g: Expr, t: Expr, e: Expr): Expr = In(Cond(g, t, e))
-    def loop(g: Expr, b: Expr): Expr = In(Loop(g, b))
-    def assign(l: String, r: Expr): Expr = In(Assign(l, r))
+    def constant(c: Int)                = In[ExprF](Constant(c))
+    def variable(n: String)             = In[ExprF](Variable(n))
+    def uminus(r: Expr)                 = In[ExprF](UMinus(r))
+    def plus(l: Expr, r: Expr)          = In[ExprF](Plus (l, r))
+    def minus(l: Expr, r: Expr)         = In[ExprF](Minus(l, r))
+    def times(l: Expr, r: Expr)         = In[ExprF](Times(l, r))
+    def div(l: Expr, r: Expr)           = In[ExprF](Div (l, r))
+    def mod(l: Expr, r: Expr)           = In[ExprF](Mod (l, r))
+    def block(es: Expr*)                = In[ExprF](Block(es.toList))
+    def cond(g: Expr, t: Expr, e: Expr) = In[ExprF](Cond(g, t, e))
+    def loop(g: Expr, b: Expr)          = In[ExprF](Loop(g, b))
+    def assign(l: String, r: Expr)      = In[ExprF](Assign(l, r))
   }
 }

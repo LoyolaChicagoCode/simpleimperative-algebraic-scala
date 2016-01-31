@@ -104,7 +104,7 @@ object evaluate {
     }
   }
 
-  import scalamu.ToMuOps
+  import scalamu._
 
   /** Evaluates the program by recursively applying the algebra to the tree. */
   def evaluate(store: Store)(expr: Expr): Result = expr.cata(evalAlgebra(store))()
