@@ -10,7 +10,7 @@ resolvers += "laufer@bintray" at "http://dl.bintray.com/laufer/maven"
 
 libraryDependencies ++= Seq(
   "edu.luc.etl" %% "scalamu" % "0.4.5",
-  "org.scalatest" %% "scalatest" % "3.0.1" % Test,
+  "org.scalatest" %% "scalatest" % "2.2.6" % Test,
   "org.scalacheck" %% "scalacheck" % "1.12.6" % Test,
   "org.scalaz" %% "scalaz-scalacheck-binding" % "7.2.8" % Test
 )
