@@ -26,21 +26,24 @@ object TestFixtures {
 
   /** if (4) { r += x } else { y -= 1 } */
   val e4a =
-    cond(constant(4),
+    cond(
+      constant(4),
       assign("r", plus(variable("r"), variable("x"))),
       assign("y", minus(variable("y"), constant(1)))
     )
 
   /** if (0) { r += x } else { y -= 1 } */
   val e4b =
-    cond(constant(0),
+    cond(
+      constant(0),
       assign("r", plus(variable("r"), variable("x"))),
       assign("y", minus(variable("y"), constant(1)))
     )
 
   /** while (y) { r += x ; y -= 1 } */
   val e5 =
-    loop(variable("y"),
+    loop(
+      variable("y"),
       block(
         assign("r", plus(variable("r"), variable("x"))),
         assign("y", minus(variable("y"), constant(1)))

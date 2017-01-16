@@ -1,6 +1,6 @@
 package edu.luc.cs.cs372.simpleimperative
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import ast._
 
 /** An interpreter for expressions and statements. */
@@ -40,12 +40,12 @@ object evaluate {
     store.get(name).fold(
       Failure(new NoSuchFieldException(name)): Result
     )(
-      Success(_)
-    )
+        Success(_)
+      )
 
   /** Evaluates the two operands and applies the operator. */
   def binOp(left: Thunk, right: Thunk, op: (Int, Int) => Int): Result =
-    for { Cell(Num(l)) <- left() ; Cell(Num(r)) <- right() } yield Cell(Num(op(l, r)))
+    for { Cell(Num(l)) <- left(); Cell(Num(r)) <- right() } yield Cell(Num(op(l, r)))
 
   /**
    * Evaluates a program within the context of a given store.
