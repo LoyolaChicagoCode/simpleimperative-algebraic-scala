@@ -72,8 +72,8 @@ object evaluate {
     case Cond(guard, thenBranch, elseBranch) =>
       () => guard() match {
         case Success(Cell.NULL) => elseBranch()
-        case Success(_) => thenBranch()
-        case f @ Failure(_) => f
+        case Success(_)         => thenBranch()
+        case f @ Failure(_)     => f
       }
     case Block(expressions) =>
       // http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
@@ -82,7 +82,7 @@ object evaluate {
         var result: Cell = Cell.NULL
         while (i.hasNext) {
           i.next()() match {
-            case Success(r) => result = r
+            case Success(r)     => result = r
             case f @ Failure(_) => return f
           }
         }
@@ -94,8 +94,8 @@ object evaluate {
         while (true) {
           guard() match {
             case Success(Cell.NULL) => return Success(Cell.NULL)
-            case Success(v) => body()
-            case f @ Failure(_) => return f
+            case Success(v)         => body()
+            case f @ Failure(_)     => return f
           }
         }
         Success(Cell.NULL)
