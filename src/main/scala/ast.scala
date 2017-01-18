@@ -44,16 +44,16 @@ object ast {
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
       case e @ Constant(v) => e
       case e @ Variable(n) => e
-      case UMinus(r) => UMinus(f(r))
-      case Plus(l, r) => Plus(f(l), f(r))
-      case Minus(l, r) => Minus(f(l), f(r))
-      case Times(l, r) => Times(f(l), f(r))
-      case Div(l, r) => Div(f(l), f(r))
-      case Mod(l, r) => Mod(f(l), f(r))
-      case Block(es) => Block(es map f)
-      case Cond(g, t, e) => Cond(f(g), f(t), f(e))
-      case Loop(g, b) => Loop(f(g), f(b))
-      case Assign(l, r) => Assign(l, f(r))
+      case UMinus(r)       => UMinus(f(r))
+      case Plus(l, r)      => Plus(f(l), f(r))
+      case Minus(l, r)     => Minus(f(l), f(r))
+      case Times(l, r)     => Times(f(l), f(r))
+      case Div(l, r)       => Div(f(l), f(r))
+      case Mod(l, r)       => Mod(f(l), f(r))
+      case Block(es)       => Block(es map f)
+      case Cond(g, t, e)   => Cond(f(g), f(t), f(e))
+      case Loop(g, b)      => Loop(f(g), f(b))
+      case Assign(l, r)    => Assign(l, f(r))
     }
   }
 
@@ -63,19 +63,19 @@ object ast {
    * This enables `===` and `assert_===` on `ExprF` instances.
    */
   implicit def exprFEqual[A](implicit A: Equal[A]): Equal[ExprF[A]] = Equal.equal {
-    case (Constant(v), Constant(w)) => v == w
-    case (Variable(m), Variable(n)) => m == n
-    case (UMinus(r), UMinus(t)) => A.equal(r, t)
-    case (Plus(l, r), Plus(s, t)) => A.equal(l, s) && A.equal(r, t)
-    case (Minus(l, r), Minus(s, t)) => A.equal(l, s) && A.equal(r, t)
-    case (Times(l, r), Times(s, t)) => A.equal(l, s) && A.equal(r, t)
-    case (Div(l, r), Div(s, t)) => A.equal(l, s) && A.equal(r, t)
-    case (Mod(l, r), Mod(s, t)) => A.equal(l, s) && A.equal(r, t)
-    case (Block(r), Block(t)) => Equal[List[A]].equal(r, t)
+    case (Constant(v), Constant(w))     => v == w
+    case (Variable(m), Variable(n))     => m == n
+    case (UMinus(r), UMinus(t))         => A.equal(r, t)
+    case (Plus(l, r), Plus(s, t))       => A.equal(l, s) && A.equal(r, t)
+    case (Minus(l, r), Minus(s, t))     => A.equal(l, s) && A.equal(r, t)
+    case (Times(l, r), Times(s, t))     => A.equal(l, s) && A.equal(r, t)
+    case (Div(l, r), Div(s, t))         => A.equal(l, s) && A.equal(r, t)
+    case (Mod(l, r), Mod(s, t))         => A.equal(l, s) && A.equal(r, t)
+    case (Block(r), Block(t))           => Equal[List[A]].equal(r, t)
     case (Cond(g, t, e), Cond(h, u, f)) => A.equal(g, h) && A.equal(t, u) && A.equal(e, f)
-    case (Loop(g, b), Loop(h, c)) => A.equal(g, h) && A.equal(b, c)
-    case (Assign(l, r), Assign(s, t)) => (l == s) && A.equal(r, t)
-    case _ => false
+    case (Loop(g, b), Loop(h, c))       => A.equal(g, h) && A.equal(b, c)
+    case (Assign(l, r), Assign(s, t))   => (l == s) && A.equal(r, t)
+    case _                              => false
   }
 
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
