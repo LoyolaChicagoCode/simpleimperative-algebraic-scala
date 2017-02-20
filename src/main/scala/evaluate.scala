@@ -1,10 +1,13 @@
 package edu.luc.cs.cs372.simpleimperative
 
-import scala.util.{ Failure, Success, Try }
-import ast._
-
 /** An interpreter for expressions and statements. */
 object evaluate {
+
+  import scala.util.{ Failure, Success, Try }
+  import scalaz.std.list._
+  import matryoshka.Algebra
+  import matryoshka.implicits._
+  import ast._
 
   /** A cell for storing a value (either a number or an object). */
   case class Cell(var value: Value) {
@@ -54,7 +57,7 @@ object evaluate {
    * tree is achieved by plugging this F-algebra into the
    * universal catamorphism (generalized fold).
    */
-  val evalAlgebra: Store => scalamu.Algebra[ExprF, Thunk] = (store: Store) => {
+  val evalAlgebra: Store => Algebra[ExprF, Thunk] = (store: Store) => {
     case Constant(value) => () => Success(Cell(Num(value)))
     case Plus(left, right) => () => binOp(left, right, _ + _)
     case Minus(left, right) => () => binOp(left, right, _ - _)
@@ -104,8 +107,6 @@ object evaluate {
     }
   }
 
-  import scalamu._
-
   /** Evaluates the program by recursively applying the algebra to the tree. */
-  def evaluate(store: Store)(expr: Expr): Result = expr.cata(evalAlgebra(store))()
+  def evaluate(store: Store)(expr: Expr): Result = (expr cata evalAlgebra(store))(ast.exprFFunctor)()
 }

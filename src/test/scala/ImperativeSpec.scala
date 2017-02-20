@@ -1,21 +1,22 @@
 package edu.luc.cs.cs372.simpleimperative
 
-import scala.util.Success
 import org.scalatest.WordSpec
 
 class ImperativeSpec extends WordSpec {
 
+  import scala.util.Success
+  import matryoshka.implicits._
   import evaluate._
+  import ast.exprFFunctor
   import TestFixtures._
 
   "The evaluator" when {
     "invoked with the given store" should {
 
       "not do anything unless triggered" in {
-        import scalamu._
         val s = store()
         val s0 = store()
-        e2.cata(evalAlgebra(s))
+        e2 cata evalAlgebra(s)
         assert { s == s0 }
       }
 
