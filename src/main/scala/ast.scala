@@ -8,7 +8,6 @@ package edu.luc.cs.cs372.simpleimperative
 object ast {
 
   import scalaz.{ Equal, Functor }
-  import scalaz.std.list._
   import matryoshka.Delay
   import matryoshka.data.Fix
 
