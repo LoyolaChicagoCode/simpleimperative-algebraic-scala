@@ -89,7 +89,7 @@ object evaluate {
       }
     }
     case Block(expressions) =>
-      // http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
+      // TODO http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
       def doSequence: Result = {
         val i = expressions.iterator
         var result: Cell = Cell.NULL
@@ -117,6 +117,5 @@ object evaluate {
   }
 
   /** Evaluates the program by recursively applying the algebra to the tree. */
-  def evaluate(store: Store)(expr: Expr): Result = (expr cata evalAlgebra(store))(ast.exprFFunctor).eval
-  // TODO figure out why we have to provide the functor explicitly
+  def evaluate(store: Store)(expr: Expr): Result = (expr cata evalAlgebra(store)).eval
 }

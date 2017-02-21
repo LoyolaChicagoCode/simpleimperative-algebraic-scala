@@ -4,8 +4,6 @@ version := "0.2"
 
 scalaVersion := "2.12.1"
 
-scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked")
-
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
