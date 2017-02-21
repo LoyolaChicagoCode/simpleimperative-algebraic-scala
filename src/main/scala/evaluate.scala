@@ -1,10 +1,12 @@
 package edu.luc.cs.cs372.simpleimperative
 
-import scala.util.{ Failure, Success, Try }
-import ast._
-
 /** An interpreter for expressions and statements. */
 object evaluate {
+
+  import scala.util.{ Failure, Success, Try }
+  import matryoshka.Algebra
+  import matryoshka.implicits._
+  import ast._
 
   /** A cell for storing a value (either a number or an object). */
   case class Cell(var value: Value) {
@@ -32,20 +34,29 @@ object evaluate {
   type Result = Try[Cell]
 
   /** A delayed, on-demand computation. */
-  type Thunk = () => Result
+  case class Thunk(computation: () => Result) {
+    def eval: Result = computation()
+  }
+
+  object Thunk {
+    def thunk(computation: => Result): Thunk = Thunk(() => computation)
+    def apply = thunk _
+  }
+  import Thunk.thunk
+
   // http://jtauber.com/blog/2008/03/30/thunks,_trampolines_and_continuation_passing/
 
   /** Looks up a variable in memory. */
   def lookup(store: Store)(name: String): Result =
-    store.get(name).fold(
+    store.get(name).fold {
       Failure(new NoSuchFieldException(name)): Result
-    )(
-        Success(_)
-      )
+    } {
+      Success(_)
+    }
 
   /** Evaluates the two operands and applies the operator. */
   def binOp(left: Thunk, right: Thunk, op: (Int, Int) => Int): Result =
-    for { Cell(Num(l)) <- left(); Cell(Num(r)) <- right() } yield Cell(Num(op(l, r)))
+    for { Cell(Num(l)) <- left.eval; Cell(Num(r)) <- right.eval } yield Cell(Num(op(l, r)))
 
   /**
    * Evaluates a program within the context of a given store.
@@ -54,58 +65,58 @@ object evaluate {
    * tree is achieved by plugging this F-algebra into the
    * universal catamorphism (generalized fold).
    */
-  val evalAlgebra: Store => scalamu.Algebra[ExprF, Thunk] = (store: Store) => {
-    case Constant(value) => () => Success(Cell(Num(value)))
-    case Plus(left, right) => () => binOp(left, right, _ + _)
-    case Minus(left, right) => () => binOp(left, right, _ - _)
-    case Times(left, right) => () => binOp(left, right, _ * _)
-    case Div(left, right) => () => binOp(left, right, _ / _)
-    case Mod(left, right) => () => binOp(left, right, _ % _)
-    case UMinus(expr) => () => for { Cell(Num(e)) <- expr() } yield Cell(Num(-e))
-    case Variable(name) => () => lookup(store)(name)
-    case Assign(left, right) =>
-      () => for {
+  def evalAlgebra(store: Store): Algebra[ExprF, Thunk] = {
+    case Constant(value)    => thunk { Success(Cell(Num(value))) }
+    case Plus(left, right)  => thunk { binOp(left, right, _ + _) }
+    case Minus(left, right) => thunk { binOp(left, right, _ - _) }
+    case Times(left, right) => thunk { binOp(left, right, _ * _) }
+    case Div(left, right)   => thunk { binOp(left, right, _ / _) }
+    case Mod(left, right)   => thunk { binOp(left, right, _ % _) }
+    case UMinus(expr)       => thunk { for { Cell(Num(e)) <- expr.eval } yield Cell(Num(-e)) }
+    case Variable(name)     => thunk { lookup(store)(name) }
+    case Assign(left, right) => thunk {
+      for {
         lvalue <- lookup(store)(left)
-        Cell(rvalue) <- right()
+        Cell(rvalue) <- right.eval
         _ <- Success(lvalue.set(rvalue))
       } yield Cell.NULL
-    case Cond(guard, thenBranch, elseBranch) =>
-      () => guard() match {
-        case Success(Cell.NULL) => elseBranch()
-        case Success(_)         => thenBranch()
+    }
+    case Cond(guard, thenBranch, elseBranch) => thunk {
+      guard.eval match {
+        case Success(Cell.NULL) => elseBranch.eval
+        case Success(_)         => thenBranch.eval
         case f @ Failure(_)     => f
       }
+    }
     case Block(expressions) =>
       // http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
       def doSequence: Result = {
         val i = expressions.iterator
         var result: Cell = Cell.NULL
         while (i.hasNext) {
-          i.next()() match {
+          i.next().eval match {
             case Success(r)     => result = r
             case f @ Failure(_) => return f
           }
         }
         Success(result)
       }
-      () => doSequence
-    case Loop(guard, body) => {
+      thunk { doSequence }
+    case Loop(guard, body) =>
       def doLoop: Result = {
         while (true) {
-          guard() match {
+          guard.eval match {
             case Success(Cell.NULL) => return Success(Cell.NULL)
-            case Success(v)         => body()
+            case Success(v)         => body.eval
             case f @ Failure(_)     => return f
           }
         }
         Success(Cell.NULL)
       }
-      () => doLoop
-    }
+      thunk { doLoop }
   }
 
-  import scalamu._
-
   /** Evaluates the program by recursively applying the algebra to the tree. */
-  def evaluate(store: Store)(expr: Expr): Result = expr.cata(evalAlgebra(store))()
+  def evaluate(store: Store)(expr: Expr): Result = (expr cata evalAlgebra(store))(ast.exprFFunctor).eval
+  // TODO figure out why we have to provide the functor explicitly
 }

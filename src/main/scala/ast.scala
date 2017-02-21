@@ -7,9 +7,9 @@ package edu.luc.cs.cs372.simpleimperative
 
 object ast {
 
-  import scalaz.{ Equal, Functor, Show }
-  import scalaz.std.list._
-  import scalamu._
+  import scalaz.{ Equal, Functor }
+  import matryoshka.Delay
+  import matryoshka.data.Fix
 
   /**
    * An abstraction of a program element.
@@ -40,7 +40,7 @@ object ast {
    * typeclass `Functor` in scalaz. This requires us to define
    * `map`.
    */
-  implicit object ExprFFunctor extends Functor[ExprF] {
+  implicit object exprFFunctor extends Functor[ExprF] {
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
       case e @ Constant(v) => e
       case e @ Variable(n) => e
@@ -62,38 +62,26 @@ object ast {
    * scalaz typeclass `Equal` using structural equality.
    * This enables `===` and `assert_===` on `ExprF` instances.
    */
-  implicit def exprFEqual[A](implicit A: Equal[A]): Equal[ExprF[A]] = Equal.equal {
-    case (Constant(v), Constant(w))     => v == w
-    case (Variable(m), Variable(n))     => m == n
-    case (UMinus(r), UMinus(t))         => A.equal(r, t)
-    case (Plus(l, r), Plus(s, t))       => A.equal(l, s) && A.equal(r, t)
-    case (Minus(l, r), Minus(s, t))     => A.equal(l, s) && A.equal(r, t)
-    case (Times(l, r), Times(s, t))     => A.equal(l, s) && A.equal(r, t)
-    case (Div(l, r), Div(s, t))         => A.equal(l, s) && A.equal(r, t)
-    case (Mod(l, r), Mod(s, t))         => A.equal(l, s) && A.equal(r, t)
-    case (Block(r), Block(t))           => Equal[List[A]].equal(r, t)
-    case (Cond(g, t, e), Cond(h, u, f)) => A.equal(g, h) && A.equal(t, u) && A.equal(e, f)
-    case (Loop(g, b), Loop(h, c))       => A.equal(g, h) && A.equal(b, c)
-    case (Assign(l, r), Assign(s, t))   => (l == s) && A.equal(r, t)
-    case _                              => false
+  implicit object exprFEqualD extends Delay[Equal, ExprF] {
+    override def apply[T](eq: Equal[T]) = Equal.equalA[ExprF[T]]
   }
 
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
-  type Expr = µ[ExprF]
+  type Expr = Fix[ExprF]
 
   /** Factory for creating Expr instances. */
   object ExprFactory {
-    def constant(c: Int) = In[ExprF](Constant(c))
-    def variable(n: String) = In[ExprF](Variable(n))
-    def uminus(r: Expr) = In[ExprF](UMinus(r))
-    def plus(l: Expr, r: Expr) = In[ExprF](Plus(l, r))
-    def minus(l: Expr, r: Expr) = In[ExprF](Minus(l, r))
-    def times(l: Expr, r: Expr) = In[ExprF](Times(l, r))
-    def div(l: Expr, r: Expr) = In[ExprF](Div(l, r))
-    def mod(l: Expr, r: Expr) = In[ExprF](Mod(l, r))
-    def block(es: Expr*) = In[ExprF](Block(es.toList))
-    def cond(g: Expr, t: Expr, e: Expr) = In[ExprF](Cond(g, t, e))
-    def loop(g: Expr, b: Expr) = In[ExprF](Loop(g, b))
-    def assign(l: String, r: Expr) = In[ExprF](Assign(l, r))
+    def constant(c: Int) = Fix[ExprF](Constant(c))
+    def variable(n: String) = Fix[ExprF](Variable(n))
+    def uminus(r: Expr) = Fix[ExprF](UMinus(r))
+    def plus(l: Expr, r: Expr) = Fix[ExprF](Plus(l, r))
+    def minus(l: Expr, r: Expr) = Fix[ExprF](Minus(l, r))
+    def times(l: Expr, r: Expr) = Fix[ExprF](Times(l, r))
+    def div(l: Expr, r: Expr) = Fix[ExprF](Div(l, r))
+    def mod(l: Expr, r: Expr) = Fix[ExprF](Mod(l, r))
+    def block(es: Expr*) = Fix[ExprF](Block(es.toList))
+    def cond(g: Expr, t: Expr, e: Expr) = Fix[ExprF](Cond(g, t, e))
+    def loop(g: Expr, b: Expr) = Fix[ExprF](Loop(g, b))
+    def assign(l: String, r: Expr) = Fix[ExprF](Assign(l, r))
   }
 }
