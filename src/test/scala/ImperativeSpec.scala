@@ -7,7 +7,6 @@ class ImperativeSpec extends WordSpec {
   import scala.util.Success
   import matryoshka.implicits._
   import evaluate._
-  import ast.exprFFunctor
   import TestFixtures._
 
   "The evaluator" when {
