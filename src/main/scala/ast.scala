@@ -70,7 +70,7 @@ object ast {
   type Expr = Fix[ExprF]
 
   /** Factory for creating Expr instances. */
-  object ExprFactory {
+  object factory {
     def constant(c: Int) = Fix[ExprF](Constant(c))
     def variable(n: String) = Fix[ExprF](Variable(n))
     def uminus(r: Expr) = Fix[ExprF](UMinus(r))
