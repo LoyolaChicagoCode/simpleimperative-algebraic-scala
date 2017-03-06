@@ -7,7 +7,8 @@ package edu.luc.cs.cs372.simpleimperative
 
 object ast {
 
-  import scalaz.{ Equal, Functor }
+  import scalaz.{ Applicative, Equal, Functor, Traverse }
+  import scalaz.std.list._
   import matryoshka.Delay
   import matryoshka.data.Fix
 
@@ -36,24 +37,48 @@ object ast {
   case class Assign[A](left: String, right: A) extends ExprF[A]
 
   /**
-   * Implicit value for declaring `ExprF` as an instance of
+   * Implicit object for declaring `ExprF` as an instance of
    * typeclass `Functor` in scalaz. This requires us to define
    * `map`.
    */
-  implicit object exprFFunctor extends Functor[ExprF] {
+  object exprFFunctor extends Functor[ExprF] {
+    import scalaz.syntax.functor._ // ∘ = map
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
-      case e @ Constant(v) => e
-      case e @ Variable(n) => e
+      case e @ Constant(_) => e
+      case e @ Variable(_) => e
       case UMinus(r)       => UMinus(f(r))
       case Plus(l, r)      => Plus(f(l), f(r))
       case Minus(l, r)     => Minus(f(l), f(r))
       case Times(l, r)     => Times(f(l), f(r))
       case Div(l, r)       => Div(f(l), f(r))
       case Mod(l, r)       => Mod(f(l), f(r))
-      case Block(es)       => Block(es map f)
+      case Block(es)       => Block(es ∘ f)
       case Cond(g, t, e)   => Cond(f(g), f(t), f(e))
       case Loop(g, b)      => Loop(f(g), f(b))
       case Assign(l, r)    => Assign(l, f(r))
+    }
+  }
+
+  /**
+   * Object for declaring `ExprF` as an instance of
+   * typeclass `Traverse` in scalaz. This requires us to define
+   * `traverseImpl`.
+   */
+  implicit object exprFTraverse extends Traverse[ExprF] {
+    import scalaz.syntax.applicative._ // η = point, ∘ = map, ⊛ = apply2
+    def traverseImpl[G[_], A, B](fa: ExprF[A])(f: A => G[B])(implicit a: Applicative[G]): G[ExprF[B]] = fa match {
+      case e @ Constant(_) => (e: ExprF[B]).η[G[?]]
+      case e @ Variable(_) => (e: ExprF[B]).η[G[?]]
+      case UMinus(r)       => f(r) ∘ (UMinus(_))
+      case Plus(l, r)      => (f(l) ⊛ f(r))(Plus(_, _))
+      case Minus(l, r)     => (f(l) ⊛ f(r))(Minus(_, _))
+      case Times(l, r)     => (f(l) ⊛ f(r))(Times(_, _))
+      case Div(l, r)       => (f(l) ⊛ f(r))(Div(_, _))
+      case Mod(l, r)       => (f(l) ⊛ f(r))(Mod(_, _))
+      case Block(es)       => a.sequence(es ∘ f) ∘ (Block(_))
+      case Cond(g, t, e)   => (f(g) ⊛ f(t) ⊛ f(e))(Cond(_, _, _))
+      case Loop(g, b)      => (f(g) ⊛ f(b))(Loop(_, _))
+      case Assign(l, r)    => f(r) ∘ (Assign(l, _))
     }
   }
 
@@ -70,7 +95,7 @@ object ast {
   type Expr = Fix[ExprF]
 
   /** Factory for creating Expr instances. */
-  object ExprFactory {
+  object factory {
     def constant(c: Int) = Fix[ExprF](Constant(c))
     def variable(n: String) = Fix[ExprF](Variable(n))
     def uminus(r: Expr) = Fix[ExprF](UMinus(r))
