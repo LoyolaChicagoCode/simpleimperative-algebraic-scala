@@ -75,7 +75,7 @@ object ast {
       case Times(l, r)     => (f(l) ⊛ f(r))(Times(_, _))
       case Div(l, r)       => (f(l) ⊛ f(r))(Div(_, _))
       case Mod(l, r)       => (f(l) ⊛ f(r))(Mod(_, _))
-      case Block(es)       => a.sequence(es ∘ f) ∘ (Block(_))
+      case Block(es)       => a.traverse(es)(f) ∘ (Block(_))
       case Cond(g, t, e)   => (f(g) ⊛ f(t) ⊛ f(e))(Cond(_, _, _))
       case Loop(g, b)      => (f(g) ⊛ f(b))(Loop(_, _))
       case Assign(l, r)    => f(r) ∘ (Assign(l, _))
