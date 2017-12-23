@@ -3,7 +3,7 @@ package edu.luc.cs.cs372.simpleimperative
 /** An interpreter for expressions and statements. */
 object evaluate {
 
-  import scala.util.{ Failure, Success, Try }
+  import scala.util.{Failure, Success, Try}
   import matryoshka.Algebra
   import matryoshka.implicits._
   import ast._
@@ -59,12 +59,12 @@ object evaluate {
     for { Cell(Num(l)) <- left.eval; Cell(Num(r)) <- right.eval } yield Cell(Num(op(l, r)))
 
   /**
-   * Evaluates a program within the context of a given store.
-   *
-   * Note the absence of explicit recursion. Traversal of the entire
-   * tree is achieved by plugging this F-algebra into the
-   * universal catamorphism (generalized fold).
-   */
+    * Evaluates a program within the context of a given store.
+    *
+    * Note the absence of explicit recursion. Traversal of the entire
+    * tree is achieved by plugging this F-algebra into the
+    * universal catamorphism (generalized fold).
+    */
   def evalAlgebra(store: Store): Algebra[ExprF, Thunk] = {
     case Constant(value)    => thunk { Success(Cell(Num(value))) }
     case Plus(left, right)  => thunk { binOp(left, right, _ + _) }

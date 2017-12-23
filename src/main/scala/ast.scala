@@ -7,21 +7,21 @@ package edu.luc.cs.cs372.simpleimperative
 
 object ast {
 
-  import scalaz.{ Applicative, Equal, Functor, Traverse }
+  import scalaz.{Applicative, Equal, Functor, Traverse}
   import scalaz.std.list._
   import matryoshka.Delay
   import matryoshka.data.Fix
 
   /**
-   * An abstraction of a program element.
-   *
-   * Endofunctor for (nongeneric) F-algebra in the category Scala types.
-   * Note that `A` is not a generic item type of the resulting algebraic
-   * data type. As can be seen below, once we form `Expr` as the least
-   * fixpoint of `ExprF`, `A` will go away.
-   *
-   * @tparam A argument of the endofunctor
-   */
+    * An abstraction of a program element.
+    *
+    * Endofunctor for (nongeneric) F-algebra in the category Scala types.
+    * Note that `A` is not a generic item type of the resulting algebraic
+    * data type. As can be seen below, once we form `Expr` as the least
+    * fixpoint of `ExprF`, `A` will go away.
+    *
+    * @tparam A argument of the endofunctor
+    */
   sealed trait ExprF[+A]
   case class Constant(value: Int) extends ExprF[Nothing]
   case class Variable(name: String) extends ExprF[Nothing]
@@ -37,10 +37,10 @@ object ast {
   case class Assign[A](left: String, right: A) extends ExprF[A]
 
   /**
-   * Implicit object for declaring `ExprF` as an instance of
-   * typeclass `Functor` in scalaz. This requires us to define
-   * `map`.
-   */
+    * Implicit object for declaring `ExprF` as an instance of
+    * typeclass `Functor` in scalaz. This requires us to define
+    * `map`.
+    */
   object exprFFunctor extends Functor[ExprF] {
     import scalaz.syntax.functor._ // ∘ = map
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
@@ -60,10 +60,10 @@ object ast {
   }
 
   /**
-   * Object for declaring `ExprF` as an instance of
-   * typeclass `Traverse` in scalaz. This requires us to define
-   * `traverseImpl`.
-   */
+    * Object for declaring `ExprF` as an instance of
+    * typeclass `Traverse` in scalaz. This requires us to define
+    * `traverseImpl`.
+    */
   implicit object exprFTraverse extends Traverse[ExprF] {
     import scalaz.syntax.applicative._ // η = point, ∘ = map, ⊛ = apply2
     def traverseImpl[G[_], A, B](fa: ExprF[A])(f: A => G[B])(implicit a: Applicative[G]): G[ExprF[B]] = fa match {
@@ -83,10 +83,10 @@ object ast {
   }
 
   /**
-   * Implicit value for declaring `ExprF` as an instance of
-   * scalaz typeclass `Equal` using structural equality.
-   * This enables `===` and `assert_===` on `ExprF` instances.
-   */
+    * Implicit value for declaring `ExprF` as an instance of
+    * scalaz typeclass `Equal` using structural equality.
+    * This enables `===` and `assert_===` on `ExprF` instances.
+    */
   implicit object exprFEqualD extends Delay[Equal, ExprF] {
     override def apply[T](eq: Equal[T]) = Equal.equalA[ExprF[T]]
   }

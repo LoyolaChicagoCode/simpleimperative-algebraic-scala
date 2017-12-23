@@ -4,7 +4,7 @@ import scalaz.syntax.applicative._
 import scalaz.std.anyVal._
 import scalaz.scalacheck.ScalaCheckBinding._
 import scalaz.scalacheck.ScalazProperties._
-import org.scalacheck.{ Arbitrary, Gen, Prop, Properties }
+import org.scalacheck.{Arbitrary, Gen, Prop, Properties}
 import Gen._
 import Arbitrary._
 
