@@ -3,8 +3,6 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/292cf4a1fda648c48e1045d527cf6ccc)](https://www.codacy.com/app/laufer/simpleimperative-algebraic-scala?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LoyolaChicagoCode/simpleimperative-algebraic-scala&amp;utm_campaign=Badge_Grade)
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
 
-[![Pull requests closed in](http://issuestats.com/github/LoyolaChicagoCode/simpleimperative-algebraic-scala/badge/pr)](http://issuestats.com/github/LoyolaChicagoCode/simpleimperative-algebraic-scala)
-[![Issues closed in](http://issuestats.com/github/LoyolaChicagoCode/simpleimperative-algebraic-scala/badge/issue)](http://issuestats.com/github/LoyolaChicagoCode/simpleimperative-algebraic-scala)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/LoyolaChicagoCode/simpleimperative-algebraic-scala.svg)](http://isitmaintained.com/project/LoyolaChicagoCode/simpleimperative-algebraic-scala "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/LoyolaChicagoCode/simpleimperative-algebraic-scala.svg)](http://isitmaintained.com/project/LoyolaChicagoCode/simpleimperative-algebraic-scala "Percentage of issues still open")
 
