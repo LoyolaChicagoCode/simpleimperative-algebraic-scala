@@ -1,8 +1,8 @@
 package edu.luc.cs.cs372.simpleimperative
 
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 
-class ImperativeSpec extends WordSpec {
+class ImperativeSpec extends AnyWordSpec {
 
   import scala.util.Success
   import matryoshka.implicits._
