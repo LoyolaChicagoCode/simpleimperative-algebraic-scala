@@ -19,5 +19,5 @@ libraryDependencies ++= Seq(
   "com.slamdata"   %% "matryoshka-core"       % "0.21.3",
   "org.scalaz"     %% "scalaz-scalacheck-binding" % "7.3.2"  % Test,
   "com.slamdata"   %% "matryoshka-scalacheck"     % "0.21.3" % Test,
-  "org.scalatest"  %% "scalatest"                 % "3.2.1"  % Test
+  "org.scalatest"  %% "scalatest"                 % "3.2.2"  % Test
 )
