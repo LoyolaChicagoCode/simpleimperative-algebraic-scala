@@ -1,4 +1,4 @@
-package edu.luc.cs.cs372.simpleimperative
+package edu.luc.cs.cs371.simpleimperative
 
 /** An interpreter for expressions and statements. */
 object evaluate {

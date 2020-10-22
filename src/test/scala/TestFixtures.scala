@@ -1,4 +1,4 @@
-package edu.luc.cs.cs372.simpleimperative
+package edu.luc.cs.cs371.simpleimperative
 
 object TestFixtures {
 
