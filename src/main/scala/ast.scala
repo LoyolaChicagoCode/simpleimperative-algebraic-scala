@@ -5,10 +5,10 @@ package edu.luc.cs.cs371.simpleimperative
  * as trees (initial algebra for the endofunctor defined next).
  */
 
-object ast {
+import cats.{Eq, Functor, Show, Traverse}
+import higherkindness.droste.data.Fix
 
-  import cats.{Eq, Functor, Show, Traverse}
-  import higherkindness.droste.data.Fix
+object ast {
 
   /**
     * An abstraction of a program element.

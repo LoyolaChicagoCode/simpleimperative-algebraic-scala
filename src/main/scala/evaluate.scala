@@ -1,12 +1,14 @@
 package edu.luc.cs.cs371.simpleimperative
 
+import cats.Eq
+import higherkindness.droste._
+
+import scala.util.{Failure, Success, Try}
+
 /** An interpreter for expressions and statements. */
 object evaluate {
 
   import ast._
-  import higherkindness.droste._
-
-  import scala.util.{Failure, Success, Try}
 
   /** A cell for storing a value (either a number or an object). */
   case class Cell(var value: Value) {
