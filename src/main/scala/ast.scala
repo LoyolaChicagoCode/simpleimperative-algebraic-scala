@@ -7,10 +7,8 @@ package edu.luc.cs.cs371.simpleimperative
 
 object ast {
 
-  import scalaz.{Applicative, Equal, Functor, Traverse}
-  import scalaz.std.list._
-  import matryoshka.Delay
-  import matryoshka.data.Fix
+  import cats.{Eq, Functor, Show, Traverse}
+  import higherkindness.droste.data.Fix
 
   /**
     * An abstraction of a program element.
@@ -38,11 +36,10 @@ object ast {
 
   /**
     * Implicit object for declaring `ExprF` as an instance of
-    * typeclass `Functor` in scalaz. This requires us to define
+    * typeclass `Functor` in Droste. This requires us to define
     * `map`.
     */
   object exprFFunctor extends Functor[ExprF] {
-    import scalaz.syntax.functor._ // ∘ = map
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
       case e @ Constant(_) => e
       case e @ Variable(_) => e
@@ -52,7 +49,7 @@ object ast {
       case Times(l, r)     => Times(f(l), f(r))
       case Div(l, r)       => Div(f(l), f(r))
       case Mod(l, r)       => Mod(f(l), f(r))
-      case Block(es)       => Block(es ∘ f)
+      case Block(es)       => Block(es.map(f))
       case Cond(g, t, e)   => Cond(f(g), f(t), f(e))
       case Loop(g, b)      => Loop(f(g), f(b))
       case Assign(l, r)    => Assign(l, f(r))
@@ -64,32 +61,33 @@ object ast {
     * typeclass `Traverse` in scalaz. This requires us to define
     * `traverseImpl`.
     */
-  implicit object exprFTraverse extends Traverse[ExprF] {
-    import scalaz.syntax.applicative._ // η = point, ∘ = map, ⊛ = apply2
-    def traverseImpl[G[_], A, B](fa: ExprF[A])(f: A => G[B])(implicit a: Applicative[G]): G[ExprF[B]] = fa match {
-      case e @ Constant(_) => (e: ExprF[B]).η[G[?]]
-      case e @ Variable(_) => (e: ExprF[B]).η[G[?]]
-      case UMinus(r)       => f(r) ∘ (UMinus(_))
-      case Plus(l, r)      => (f(l) ⊛ f(r))(Plus(_, _))
-      case Minus(l, r)     => (f(l) ⊛ f(r))(Minus(_, _))
-      case Times(l, r)     => (f(l) ⊛ f(r))(Times(_, _))
-      case Div(l, r)       => (f(l) ⊛ f(r))(Div(_, _))
-      case Mod(l, r)       => (f(l) ⊛ f(r))(Mod(_, _))
-      case Block(es)       => a.traverse(es)(f) ∘ (Block(_))
-      case Cond(g, t, e)   => (f(g) ⊛ f(t) ⊛ f(e))(Cond(_, _, _))
-      case Loop(g, b)      => (f(g) ⊛ f(b))(Loop(_, _))
-      case Assign(l, r)    => f(r) ∘ (Assign(l, _))
+  implicit val exprFTraverse: Traverse[ExprF] = new Traverse[ExprF] {
+    import cats._
+    import cats.implicits._ // η = point, ∘ = map, ⊛ = apply2
+    override def traverse[G[_]: Applicative, A, B](fa: ExprF[A])(f: A => G[B]): G[ExprF[B]] = fa match {
+      case c @ Constant(_) => (c: ExprF[B]).pure[G]
+      case v @ Variable(_) => (v: ExprF[B]).pure[G]
+      case UMinus(r)       => f(r).map(UMinus(_))
+      case Plus(l, r)      => (f(l), f(r)).mapN(Plus(_, _))
+      case Minus(l, r)     => (f(l), f(r)).mapN(Minus(_, _))
+      case Times(l, r)     => (f(l), f(r)).mapN(Times(_, _))
+      case Div(l, r)       => (f(l), f(r)).mapN(Div(_, _))
+      case Mod(l, r)       => (f(l), f(r)).mapN(Mod(_, _))
+      case Block(es)       => es.traverse(f).map(Block(_))
+      case Cond(g, t, e)   => (f(g), f(t), f(e)).mapN(Cond(_, _, _))
+      case Loop(g, b)      => (f(g), f(b)).mapN(Loop(_, _))
+      case Assign(l, r)    => f(r).map(Assign(l, _))
     }
+
+    // TODO working implementations of foldRight and foldLeft
+    // see also expressions-algebraic-scala
+    def foldRight[A, B](fa: ExprF[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = ???
+    def foldLeft[A, B](fa: ExprF[A], b: B)(f: (B, A) => B): B = ???
   }
 
-  /**
-    * Implicit value for declaring `ExprF` as an instance of
-    * scalaz typeclass `Equal` using structural equality.
-    * This enables `===` and `assert_===` on `ExprF` instances.
-    */
-  implicit object exprFEqualD extends Delay[Equal, ExprF] {
-    override def apply[T](eq: Equal[T]) = Equal.equalA[ExprF[T]]
-  }
+  implicit def exprFEquals[A]: Eq[ExprF[A]] = Eq.fromUniversalEquals
+
+  implicit def exprFShow[A]: Show[ExprF[A]] = Show.fromToString
 
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
   type Expr = Fix[ExprF]
