@@ -17,3 +17,5 @@ libraryDependencies ++= Seq(
   "io.chrisdavenport"          %% "cats-scalacheck"           % "0.3.1" % Test,
   "org.typelevel"              %% "cats-laws"                 % "2.6.1" % Test
 )
+
+scalacOptions ++= Seq("-rewrite", "-new-syntax")

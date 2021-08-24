@@ -58,7 +58,7 @@ object evaluate {
 
   /** Evaluates the two operands and applies the operator. */
   def binOp(left: Thunk, right: Thunk, op: (Int, Int) => Int): Result =
-    for { Cell(Num(l)) <- left.eval; Cell(Num(r)) <- right.eval } yield Cell(Num(op(l, r)))
+    for  Cell(Num(l)) <- left.eval; Cell(Num(r)) <- right.eval  yield Cell(Num(op(l, r)))
 
   /**
     * Evaluates a program within the context of a given store.
@@ -74,14 +74,14 @@ object evaluate {
     case Times(left, right) => thunk { binOp(left, right, _ * _) }
     case Div(left, right)   => thunk { binOp(left, right, _ / _) }
     case Mod(left, right)   => thunk { binOp(left, right, _ % _) }
-    case UMinus(expr)       => thunk { for { Cell(Num(e)) <- expr.eval } yield Cell(Num(-e)) }
+    case UMinus(expr)       => thunk { for  Cell(Num(e)) <- expr.eval  yield Cell(Num(-e)) }
     case Variable(name)     => thunk { lookup(store)(name) }
     case Assign(left, right) => thunk {
-      for {
+      for
         lvalue <- lookup(store)(left)
         Cell(rvalue) <- right.eval
         _ <- Success(lvalue.set(rvalue))
-      } yield Cell.NULL
+      yield Cell.NULL
     }
     case Cond(guard, thenBranch, elseBranch) => thunk {
       guard.eval match {
@@ -95,7 +95,7 @@ object evaluate {
       def doSequence: Result = {
         val i = expressions.iterator
         var result: Cell = Cell.NULL
-        while (i.hasNext) {
+        while i.hasNext do {
           i.next().eval match {
             case Success(r)     => result = r
             case f @ Failure(_) => return f
@@ -106,7 +106,7 @@ object evaluate {
       thunk { doSequence }
     case Loop(guard, body) =>
       def doLoop: Result = {
-        while (true) {
+        while true do {
           guard.eval match {
             case Success(Cell.NULL) => return Success(Cell.NULL)
             case Success(v)         => body.eval
