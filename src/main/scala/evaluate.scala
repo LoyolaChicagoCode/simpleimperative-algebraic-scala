@@ -11,14 +11,14 @@ object evaluate {
   import ast._, ExprF._
 
   /** A cell for storing a value (either a number or an object). */
-  case class Cell(var value: Value) {
+  case class Cell(var value: Value) derives CanEqual {
     def get: Value = value
     def set(value: Value): Unit = this.value = value
   }
 
   /** A companion object defining a useful Cell instance. */
   object Cell {
-    def apply(i: Int): Cell = Cell(Num(i)) // Left -> number, Right -> object
+    def apply(i: Int): Cell = Cell(Value.Num(i)) // Left -> number, Right -> object
     val NULL = Cell(0)
   }
 
@@ -29,12 +29,14 @@ object evaluate {
   type Store = Instance
 
   /** A run-time value is always a number for now. We represent NULL as 0. */
-  sealed trait Value
-  case class Num(value: Int) extends Value
+  enum Value derives CanEqual:
+    case Num(value: Int) extends Value
+
+  import Value._
 
   /** The result of a successful or failed computation. */
   type Result = Try[Cell]
-
+  
   /** A delayed, on-demand computation. */
   case class Thunk(computation: () => Result) {
     def eval: Result = computation()

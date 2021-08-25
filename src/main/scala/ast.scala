@@ -20,7 +20,7 @@ object ast {
     *
     * @tparam A argument of the endofunctor
     */
-  enum ExprF[+A]:
+  enum ExprF[+A] derives CanEqual:
     case Constant(value: Int) extends ExprF[Nothing]
     case Variable(name: String) extends ExprF[Nothing]
     case UMinus[A](expr: A) extends ExprF[A]
@@ -94,19 +94,22 @@ object ast {
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
   type Expr = Fix[ExprF]
 
+  /** Enable typesafe equality for `Expr`. */
+  given CanEqual[Expr, Expr] = CanEqual.derived
+
   /** Factory for creating Expr instances. */
   object factory {
-    def constant(c: Int) = Fix[ExprF](Constant(c))
-    def variable(n: String) = Fix[ExprF](Variable(n))
-    def uminus(r: Expr) = Fix[ExprF](UMinus(r))
-    def plus(l: Expr, r: Expr) = Fix[ExprF](Plus(l, r))
-    def minus(l: Expr, r: Expr) = Fix[ExprF](Minus(l, r))
-    def times(l: Expr, r: Expr) = Fix[ExprF](Times(l, r))
-    def div(l: Expr, r: Expr) = Fix[ExprF](Div(l, r))
-    def mod(l: Expr, r: Expr) = Fix[ExprF](Mod(l, r))
-    def block(es: Expr*) = Fix[ExprF](Block(es.toList))
-    def cond(g: Expr, t: Expr, e: Expr) = Fix[ExprF](Cond(g, t, e))
-    def loop(g: Expr, b: Expr) = Fix[ExprF](Loop(g, b))
-    def assign(l: String, r: Expr) = Fix[ExprF](Assign(l, r))
+    def constant(c: Int) = Fix(Constant(c))
+    def variable(n: String) = Fix(Variable(n))
+    def uminus(r: Expr) = Fix(UMinus(r))
+    def plus(l: Expr, r: Expr) = Fix(Plus(l, r))
+    def minus(l: Expr, r: Expr) = Fix(Minus(l, r))
+    def times(l: Expr, r: Expr) = Fix(Times(l, r))
+    def div(l: Expr, r: Expr) = Fix(Div(l, r))
+    def mod(l: Expr, r: Expr) = Fix(Mod(l, r))
+    def block(es: Expr*) = Fix(Block(es.toList))
+    def cond(g: Expr, t: Expr, e: Expr) = Fix(Cond(g, t, e))
+    def loop(g: Expr, b: Expr) = Fix(Loop(g, b))
+    def assign(l: String, r: Expr) = Fix(Assign(l, r))
   }
 }
