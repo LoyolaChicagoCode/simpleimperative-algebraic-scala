@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try}
 /** An interpreter for expressions and statements. */
 object evaluate {
 
-  import ast._
+  import ast._, ExprF._
 
   /** A cell for storing a value (either a number or an object). */
   case class Cell(var value: Value) {

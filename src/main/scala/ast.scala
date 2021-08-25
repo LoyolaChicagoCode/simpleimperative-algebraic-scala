@@ -20,19 +20,21 @@ object ast {
     *
     * @tparam A argument of the endofunctor
     */
-  sealed trait ExprF[+A]
-  case class Constant(value: Int) extends ExprF[Nothing]
-  case class Variable(name: String) extends ExprF[Nothing]
-  case class UMinus[A](expr: A) extends ExprF[A]
-  case class Plus[A](left: A, right: A) extends ExprF[A]
-  case class Minus[A](left: A, right: A) extends ExprF[A]
-  case class Times[A](left: A, right: A) extends ExprF[A]
-  case class Div[A](left: A, right: A) extends ExprF[A]
-  case class Mod[A](left: A, right: A) extends ExprF[A]
-  case class Block[A](expressions: List[A]) extends ExprF[A]
-  case class Cond[A](guard: A, thenBranch: A, elseBranch: A) extends ExprF[A]
-  case class Loop[A](guard: A, body: A) extends ExprF[A]
-  case class Assign[A](left: String, right: A) extends ExprF[A]
+  enum ExprF[+A]:
+    case Constant(value: Int) extends ExprF[Nothing]
+    case Variable(name: String) extends ExprF[Nothing]
+    case UMinus[A](expr: A) extends ExprF[A]
+    case Plus[A](left: A, right: A) extends ExprF[A]
+    case Minus[A](left: A, right: A) extends ExprF[A]
+    case Times[A](left: A, right: A) extends ExprF[A]
+    case Div[A](left: A, right: A) extends ExprF[A]
+    case Mod[A](left: A, right: A) extends ExprF[A]
+    case Block[A](expressions: List[A]) extends ExprF[A]
+    case Cond[A](guard: A, thenBranch: A, elseBranch: A) extends ExprF[A]
+    case Loop[A](guard: A, body: A) extends ExprF[A]
+    case Assign[A](left: String, right: A) extends ExprF[A]
+
+  import ExprF._
 
   /**
     * Implicit object for declaring `ExprF` as an instance of
@@ -65,8 +67,8 @@ object ast {
     import cats._
     import cats.implicits._ // η = point, ∘ = map, ⊛ = apply2
     override def traverse[G[_]: Applicative, A, B](fa: ExprF[A])(f: A => G[B]): G[ExprF[B]] = fa match {
-      case c @ Constant(_) => (c: ExprF[B]).pure[G]
-      case v @ Variable(_) => (v: ExprF[B]).pure[G]
+      case c @ Constant(_) => c.pure[G]
+      case v @ Variable(_) => v.pure[G]
       case UMinus(r)       => f(r).map(UMinus(_))
       case Plus(l, r)      => (f(l), f(r)).mapN(Plus(_, _))
       case Minus(l, r)     => (f(l), f(r)).mapN(Minus(_, _))
