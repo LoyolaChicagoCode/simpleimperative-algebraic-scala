@@ -94,7 +94,7 @@ object ast {
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
   type Expr = Fix[ExprF]
 
-  /** Enable typesafe equality for `Expr`. */
+  /** Enable typesafe equality for `Expr` (not yet part of `Fix`). */
   given CanEqual[Expr, Expr] = CanEqual.derived
 
   /** Factory for creating Expr instances. */

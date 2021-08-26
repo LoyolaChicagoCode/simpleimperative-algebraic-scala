@@ -12,8 +12,8 @@ object imperativeTests extends Properties("imperativeTests") {
   import TestFixtures._
   import evaluate._, Value.Num
 
-  /** Enable typesafe equality for `Map[String, Cell]`. */
-  given CanEqual[Map[String, Cell], Map[String, Cell]] = CanEqual.derived
+  /** Enable missing typesafe equality for `Map[K, V]`. */
+  given [K, V](using keq: CanEqual[K, K], veq: CanEqual[V, V]): CanEqual[Map[K, V], Map[K, V]] = CanEqual.derived
 
   /** Enable typesafe equality for `Result`. */
   given CanEqual[Result, Success[Cell]] = CanEqual.derived
