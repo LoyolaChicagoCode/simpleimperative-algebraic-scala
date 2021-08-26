@@ -1,12 +1,12 @@
 package edu.luc.cs.cs371.simpleimperative
 
-import cats.implicits._
-import org.scalacheck.cats.implicits._
+import cats.implicits.*
+import org.scalacheck.cats.implicits.*
 import org.scalacheck.{Arbitrary, Gen, Prop, Properties}
 
 object lawTests extends Properties("lawTests") {
 
-  import ast._, ExprF._, factory._
+  import ast.*, ExprF.*, factory.*
 
   property("equals1") = Prop { Constant(3) == Constant(3) }
   property("equals2") = Prop { constant(3) == constant(3) }
@@ -30,7 +30,7 @@ object lawTests extends Properties("lawTests") {
   def genLoop[A](g: Gen[A]) = (g, g).mapN(Loop(_, _))
   def genAssign[A](f: Gen[String], g: Gen[A]) = (f, g).mapN(Assign(_, _))
 
-  implicit def exprFArbitrary[A: Arbitrary]: Arbitrary[ExprF[A]] = Arbitrary {
+  given [A](using Arbitrary[A]): Arbitrary[ExprF[A]] = Arbitrary {
     val i = Arbitrary.arbInt.arbitrary
     val s = Arbitrary.arbString.arbitrary
     val g = Arbitrary.arbitrary[A]

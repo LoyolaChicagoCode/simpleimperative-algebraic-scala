@@ -1,14 +1,14 @@
 package edu.luc.cs.cs371.simpleimperative
 
 import cats.Eq
-import higherkindness.droste._
+import higherkindness.droste.*
 
 import scala.util.{Failure, Success, Try}
 
 /** An interpreter for expressions and statements. */
 object evaluate {
 
-  import ast._, ExprF._
+  import ast.*, ExprF.*
 
   /** A cell for storing a value (either a number or an object). */
   case class Cell(var value: Value) derives CanEqual {
@@ -32,7 +32,7 @@ object evaluate {
   enum Value derives CanEqual:
     case Num(value: Int) extends Value
 
-  import Value._
+  import Value.*
 
   /** The result of a successful or failed computation. */
   type Result = Try[Cell]

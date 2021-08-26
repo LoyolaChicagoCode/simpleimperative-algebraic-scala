@@ -2,7 +2,7 @@ package edu.luc.cs.cs371.simpleimperative
 
 object TestFixtures {
 
-  import ast.factory._
+  import ast.factory.*
   import evaluate.Cell
 
   def store() = Map[String, Cell](

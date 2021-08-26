@@ -34,14 +34,13 @@ object ast {
     case Loop[A](guard: A, body: A) extends ExprF[A]
     case Assign[A](left: String, right: A) extends ExprF[A]
 
-  import ExprF._
+  import ExprF.*
 
   /**
-    * Implicit object for declaring `ExprF` as an instance of
-    * typeclass `Functor` in Droste. This requires us to define
-    * `map`.
+    * Declaration of `ExprF` as an instance of typeclass `Functor` in Cats.
+    * This requires us to define `map`.
     */
-  object exprFFunctor extends Functor[ExprF] {
+  given Functor[ExprF] = new Functor[ExprF] {
     def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
       case e @ Constant(_) => e
       case e @ Variable(_) => e
@@ -59,13 +58,12 @@ object ast {
   }
 
   /**
-    * Object for declaring `ExprF` as an instance of
-    * typeclass `Traverse` in scalaz. This requires us to define
-    * `traverseImpl`.
+    * Declaration of `ExprF` as an instance of typeclass `Traverse` in Cats.
+    * This requires us to define `traverse`.
     */
-  implicit val exprFTraverse: Traverse[ExprF] = new Traverse[ExprF] {
-    import cats._
-    import cats.implicits._ // η = point, ∘ = map, ⊛ = apply2
+  given Traverse[ExprF] = new Traverse[ExprF] {
+    import cats.*
+    import cats.implicits.* // η = point, ∘ = map, ⊛ = apply2
     override def traverse[G[_]: Applicative, A, B](fa: ExprF[A])(f: A => G[B]): G[ExprF[B]] = fa match {
       case c @ Constant(_) => c.pure[G]
       case v @ Variable(_) => v.pure[G]
@@ -87,9 +85,9 @@ object ast {
     def foldLeft[A, B](fa: ExprF[A], b: B)(f: (B, A) => B): B = ???
   }
 
-  implicit def exprFEquals[A]: Eq[ExprF[A]] = Eq.fromUniversalEquals
+  given [A](using Eq[A]): Eq[ExprF[A]] = Eq.fromUniversalEquals
 
-  implicit def exprFShow[A]: Show[ExprF[A]] = Show.fromToString
+  given [A](using Show[A]): Show[ExprF[A]] = Show.fromToString
 
   /** Least fixpoint of `ExprF` as carrier object for the initial algebra. */
   type Expr = Fix[ExprF]

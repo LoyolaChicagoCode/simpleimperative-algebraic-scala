@@ -1,16 +1,16 @@
 package edu.luc.cs.cs371.simpleimperative
 
 import cats.Eq
-import cats.implicits._
-import higherkindness.droste._
+import cats.implicits.*
+import higherkindness.droste.*
 import org.scalacheck.{Prop, Properties}
 
 import scala.util.Success
 
 object imperativeTests extends Properties("imperativeTests") {
 
-  import TestFixtures._
-  import evaluate._, Value.Num
+  import TestFixtures.*
+  import evaluate.*, Value.Num
 
   /** Enable missing typesafe equality for `Map[K, V]`. */
   given [K, V](using keq: CanEqual[K, K], veq: CanEqual[V, V]): CanEqual[Map[K, V], Map[K, V]] = CanEqual.derived
