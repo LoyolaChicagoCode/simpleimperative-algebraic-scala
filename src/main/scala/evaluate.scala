@@ -60,7 +60,10 @@ object evaluate {
 
   /** Evaluates the two operands and applies the operator. */
   def binOp(left: Thunk, right: Thunk, op: (Int, Int) => Int): Result =
-    for  Cell(Num(l)) <- left.eval; Cell(Num(r)) <- right.eval  yield Cell(Num(op(l, r)))
+    for
+      Cell(Num(l)) <- left.eval
+      Cell(Num(r)) <- right.eval
+    yield Cell(Num(op(l, r)))
 
   /**
     * Evaluates a program within the context of a given store.
@@ -94,6 +97,7 @@ object evaluate {
     }
     case Block(expressions) =>
       // TODO http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
+      // TODO https://stackoverflow.com/questions/57516234/listtryt-to-trylistt-in-scala
       def doSequence: Result = {
         val i = expressions.iterator
         var result: Cell = Cell.NULL
