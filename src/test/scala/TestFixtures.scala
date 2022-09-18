@@ -1,6 +1,6 @@
 package edu.luc.cs.cs371.simpleimperative
 
-object TestFixtures {
+object TestFixtures:
 
   import ast.factory.*
   import evaluate.Cell
@@ -49,4 +49,5 @@ object TestFixtures {
         assign("y", minus(variable("y"), constant(1)))
       )
     )
-}
+
+end TestFixtures

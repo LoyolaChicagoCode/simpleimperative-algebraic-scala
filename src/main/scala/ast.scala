@@ -8,7 +8,7 @@ package edu.luc.cs.cs371.simpleimperative
 import cats.{Eq, Functor, Show, Traverse}
 import higherkindness.droste.data.Fix
 
-object ast {
+object ast:
 
   /**
     * An abstraction of a program element.
@@ -33,15 +33,16 @@ object ast {
     case Cond[A](guard: A, thenBranch: A, elseBranch: A) extends ExprF[A]
     case Loop[A](guard: A, body: A) extends ExprF[A]
     case Assign[A](left: String, right: A) extends ExprF[A]
-
+  end ExprF
+  
   import ExprF.*
 
   /**
     * Declaration of `ExprF` as an instance of typeclass `Functor` in Cats.
     * This requires us to define `map`.
     */
-  given Functor[ExprF] = new Functor[ExprF] {
-    def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match {
+  given Functor[ExprF] = new Functor[ExprF]:
+    def map[A, B](fa: ExprF[A])(f: A => B): ExprF[B] = fa match
       case e @ Constant(_) => e
       case e @ Variable(_) => e
       case UMinus(r)       => UMinus(f(r))
@@ -54,17 +55,15 @@ object ast {
       case Cond(g, t, e)   => Cond(f(g), f(t), f(e))
       case Loop(g, b)      => Loop(f(g), f(b))
       case Assign(l, r)    => Assign(l, f(r))
-    }
-  }
 
   /**
     * Declaration of `ExprF` as an instance of typeclass `Traverse` in Cats.
     * This requires us to define `traverse`.
     */
-  given Traverse[ExprF] = new Traverse[ExprF] {
+  given Traverse[ExprF] = new Traverse[ExprF]:
     import cats.*
     import cats.implicits.* // η = point, ∘ = map, ⊛ = apply2
-    override def traverse[G[_]: Applicative, A, B](fa: ExprF[A])(f: A => G[B]): G[ExprF[B]] = fa match {
+    override def traverse[G[_]: Applicative, A, B](fa: ExprF[A])(f: A => G[B]): G[ExprF[B]] = fa match
       case c @ Constant(_) => c.pure[G]
       case v @ Variable(_) => v.pure[G]
       case UMinus(r)       => f(r).map(UMinus(_))
@@ -77,13 +76,11 @@ object ast {
       case Cond(g, t, e)   => (f(g), f(t), f(e)).mapN(Cond(_, _, _))
       case Loop(g, b)      => (f(g), f(b)).mapN(Loop(_, _))
       case Assign(l, r)    => f(r).map(Assign(l, _))
-    }
 
     // TODO working implementations of foldRight and foldLeft
     // see also expressions-algebraic-scala
     def foldRight[A, B](fa: ExprF[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = ???
     def foldLeft[A, B](fa: ExprF[A], b: B)(f: (B, A) => B): B = ???
-  }
 
   given [A](using Eq[A]): Eq[ExprF[A]] = Eq.fromUniversalEquals
 
@@ -96,7 +93,7 @@ object ast {
   given CanEqual[Expr, Expr] = CanEqual.derived
 
   /** Factory for creating Expr instances. */
-  object factory {
+  object factory:
     def constant(c: Int) = Fix(Constant(c))
     def variable(n: String) = Fix(Variable(n))
     def uminus(r: Expr) = Fix(UMinus(r))
@@ -109,5 +106,6 @@ object ast {
     def cond(g: Expr, t: Expr, e: Expr) = Fix(Cond(g, t, e))
     def loop(g: Expr, b: Expr) = Fix(Loop(g, b))
     def assign(l: String, r: Expr) = Fix(Assign(l, r))
-  }
-}
+  end factory
+  
+end ast

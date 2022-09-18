@@ -7,7 +7,7 @@ import org.scalacheck.{Prop, Properties}
 
 import scala.util.Success
 
-object imperativeTests extends Properties("imperativeTests") {
+object imperativeTests extends Properties("imperativeTests"):
 
   import TestFixtures.*
   import evaluate.*, Value.Num
@@ -75,4 +75,5 @@ object imperativeTests extends Properties("imperativeTests") {
       s("r") == Cell(Num(6)) &&
       s("y") == Cell(Num(0))
   }
-}
+
+end imperativeTests

@@ -6,22 +6,22 @@ import higherkindness.droste.*
 import scala.util.{Failure, Success, Try}
 
 /** An interpreter for expressions and statements. */
-object evaluate {
+object evaluate:
 
   import ast.*, ExprF.*
 
   /** A cell for storing a value (either a number or an object). */
-  case class Cell(var value: Value) derives CanEqual {
+  case class Cell(var value: Value) derives CanEqual:
     def get: Value = value
     def set(value: Value): Unit = this.value = value
-  }
+  end Cell
 
   /** A companion object defining a useful Cell instance. */
-  object Cell {
+  object Cell:
     def apply(i: Int): Cell = Cell(Value.Num(i)) // Left -> number, Right -> object
     val NULL = Cell(0)
-  }
-
+  end Cell
+  
   /** A object (instance) is a mapping from variable names to storage cells. */
   type Instance = Map[String, Cell]
 
@@ -38,14 +38,15 @@ object evaluate {
   type Result = Try[Cell]
   
   /** A delayed, on-demand computation. */
-  case class Thunk(computation: () => Result) {
+  case class Thunk(computation: () => Result):
     def eval: Result = computation()
-  }
-
-  object Thunk {
+  end Thunk
+  
+  object Thunk:
     def thunk(computation: => Result): Thunk = Thunk(() => computation)
     def apply = thunk _
-  }
+  end Thunk
+  
   import Thunk.thunk
 
   // http://jtauber.com/blog/2008/03/30/thunks,_trampolines_and_continuation_passing/
@@ -73,14 +74,30 @@ object evaluate {
     * universal catamorphism (generalized fold).
     */
   def evalAlgebra(store: Store): Algebra[ExprF, Thunk] = Algebra {
-    case Constant(value)    => thunk { Success(Cell(Num(value))) }
-    case Plus(left, right)  => thunk { binOp(left, right, _ + _) }
-    case Minus(left, right) => thunk { binOp(left, right, _ - _) }
-    case Times(left, right) => thunk { binOp(left, right, _ * _) }
-    case Div(left, right)   => thunk { binOp(left, right, _ / _) }
-    case Mod(left, right)   => thunk { binOp(left, right, _ % _) }
-    case UMinus(expr)       => thunk { for  Cell(Num(e)) <- expr.eval  yield Cell(Num(-e)) }
-    case Variable(name)     => thunk { lookup(store)(name) }
+    case Constant(value) => thunk {
+      Success(Cell(Num(value)))
+    }
+    case Plus(left, right) => thunk {
+      binOp(left, right, _ + _)
+    }
+    case Minus(left, right) => thunk {
+      binOp(left, right, _ - _)
+    }
+    case Times(left, right) => thunk {
+      binOp(left, right, _ * _)
+    }
+    case Div(left, right) => thunk {
+      binOp(left, right, _ / _)
+    }
+    case Mod(left, right) => thunk {
+      binOp(left, right, _ % _)
+    }
+    case UMinus(expr) => thunk {
+      for Cell(Num(e)) <- expr.eval yield Cell(Num(-e))
+    }
+    case Variable(name) => thunk {
+      lookup(store)(name)
+    }
     case Assign(left, right) => thunk {
       for
         lvalue <- lookup(store)(left)
@@ -91,42 +108,42 @@ object evaluate {
     case Cond(guard, thenBranch, elseBranch) => thunk {
       guard.eval match {
         case Success(Cell.NULL) => elseBranch.eval
-        case Success(_)         => thenBranch.eval
-        case f @ Failure(_)     => f
+        case Success(_) => thenBranch.eval
+        case f@Failure(_) => f
       }
     }
     case Block(expressions) =>
       // TODO http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
       // TODO https://stackoverflow.com/questions/57516234/listtryt-to-trylistt-in-scala
-      def doSequence: Result = {
+      def doSequence: Result =
         val i = expressions.iterator
         var result: Cell = Cell.NULL
-        while i.hasNext do {
-          i.next().eval match {
-            case Success(r)     => result = r
-            case f @ Failure(_) => return f
-          }
-        }
+        while i.hasNext do
+          i.next().eval match
+            case Success(r) => result = r
+            case f@Failure(_) => return f
         Success(result)
+
+      thunk {
+        doSequence
       }
-      thunk { doSequence }
     case Loop(guard, body) =>
-      def doLoop: Result = {
-        while true do {
-          guard.eval match {
+      def doLoop: Result =
+        while true do
+          guard.eval match
             case Success(Cell.NULL) => return Success(Cell.NULL)
-            case Success(v)         => body.eval
-            case f @ Failure(_)     => return f
-          }
-        }
+            case Success(v) => body.eval
+            case f@Failure(_) => return f
         Success(Cell.NULL)
+
+      thunk {
+        doLoop
       }
-      thunk { doLoop }
   }
 
   /** Evaluates the program by recursively applying the algebra to the tree. */
-  def evaluate(store: Store)(expr: Expr): Result = {
+  def evaluate(store: Store)(expr: Expr): Result =
     val ev = scheme.cata(evalAlgebra(store))
     ev(expr).eval
-  }
-}
+  
+end evaluate
