@@ -16,6 +16,6 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= Seq(
   "io.higherkindness"          %% "droste-core"               % "0.9.0",
-  "io.chrisdavenport"          %% "cats-scalacheck"           % "0.3.1" % Test,
-  "org.typelevel"              %% "cats-laws"                 % "2.8.0" % Test
+  "io.chrisdavenport"          %% "cats-scalacheck"           % "0.3.2" % Test,
+  "org.typelevel"              %% "cats-laws"                 % "2.10.0" % Test
 )
