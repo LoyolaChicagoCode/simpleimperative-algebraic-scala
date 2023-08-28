@@ -4,18 +4,10 @@ version := "0.4"
 
 scalaVersion := "3.3.0"
 
-scalacOptions ++= Seq(
-  "-deprecation",
-  "-feature",
-  "-unchecked",
-  "-Yexplicit-nulls",
-  "-Ysafe-init",
-  "-language:strictEquality",
-  "-language:higherKinds"
-)
+scalacOptions += "@.scalacOptions.txt"
 
 libraryDependencies ++= Seq(
-  "io.higherkindness"          %% "droste-core"               % "0.9.0",
-  "io.chrisdavenport"          %% "cats-scalacheck"           % "0.3.2" % Test,
-  "org.typelevel"              %% "cats-laws"                 % "2.10.0" % Test
+  "io.higherkindness" %% "droste-core"     % "0.9.0",
+  "io.chrisdavenport" %% "cats-scalacheck" % "0.3.2"  % Test,
+  "org.typelevel"     %% "cats-laws"       % "2.10.0" % Test
 )
