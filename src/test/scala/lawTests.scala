@@ -30,14 +30,13 @@ object lawTests extends Properties("lawTests"):
   def genLoop[A](g: Gen[A]) = (g, g).mapN(Loop(_, _))
   def genAssign[A](f: Gen[String], g: Gen[A]) = (f, g).mapN(Assign(_, _))
 
-  given [A](using Arbitrary[A]): Arbitrary[ExprF[A]] = Arbitrary {
+  given [A](using Arbitrary[A]): Arbitrary[ExprF[A]] = Arbitrary:
     val i = Arbitrary.arbInt.arbitrary
     val s = Arbitrary.arbString.arbitrary
     val g = Arbitrary.arbitrary[A]
     Gen.oneOf(genConstant(i), genVariable(s),
       genUMinus(g), genPlus(g), genMinus(g), genTimes(g), genDiv(g), genMod(g),
       genBlock(g), genCond(g), genLoop(g), genAssign(s, g))
-  }
 
   include(cats.laws.discipline.FunctorTests[ExprF].functor[Int, Int, Int].all)
   // TODO reinclude after fixing Traverse

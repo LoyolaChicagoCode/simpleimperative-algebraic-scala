@@ -53,11 +53,11 @@ object evaluate:
 
   /** Looks up a variable in memory. */
   def lookup(store: Store)(name: String): Result =
-    store.get(name).fold {
+    store.get(name).fold(
       Failure(new NoSuchFieldException(name)): Result
-    } {
+    ) (
       Success(_)
-    }
+    )
 
   /** Evaluates the two operands and applies the operator. */
   def binOp(left: Thunk, right: Thunk, op: (Int, Int) => Int): Result =
@@ -73,45 +73,34 @@ object evaluate:
     * tree is achieved by plugging this F-algebra into the
     * universal catamorphism (generalized fold).
     */
-  def evalAlgebra(store: Store): Algebra[ExprF, Thunk] = Algebra {
-    case Constant(value) => thunk {
+  def evalAlgebra(store: Store): Algebra[ExprF, Thunk] = Algebra:
+    case Constant(value) => thunk:
       Success(Cell(Num(value)))
-    }
-    case Plus(left, right) => thunk {
+    case Plus(left, right) => thunk:
       binOp(left, right, _ + _)
-    }
-    case Minus(left, right) => thunk {
+    case Minus(left, right) => thunk:
       binOp(left, right, _ - _)
-    }
-    case Times(left, right) => thunk {
+    case Times(left, right) => thunk:
       binOp(left, right, _ * _)
-    }
-    case Div(left, right) => thunk {
+    case Div(left, right) => thunk:
       binOp(left, right, _ / _)
-    }
-    case Mod(left, right) => thunk {
+    case Mod(left, right) => thunk:
       binOp(left, right, _ % _)
-    }
-    case UMinus(expr) => thunk {
+    case UMinus(expr) => thunk:
       for Cell(Num(e)) <- expr.eval yield Cell(Num(-e))
-    }
-    case Variable(name) => thunk {
+    case Variable(name) => thunk:
       lookup(store)(name)
-    }
-    case Assign(left, right) => thunk {
+    case Assign(left, right) => thunk:
       for
         lvalue <- lookup(store)(left)
         Cell(rvalue) <- right.eval
         _ <- Success(lvalue.set(rvalue))
       yield Cell.NULL
-    }
-    case Cond(guard, thenBranch, elseBranch) => thunk {
-      guard.eval match {
+    case Cond(guard, thenBranch, elseBranch) => thunk:
+      guard.eval match
         case Success(Cell.NULL) => elseBranch.eval
         case Success(_) => thenBranch.eval
         case f@Failure(_) => f
-      }
-    }
     case Block(expressions) =>
       // TODO http://stackoverflow.com/questions/12892701/abort-early-in-a-fold
       // TODO https://stackoverflow.com/questions/57516234/listtryt-to-trylistt-in-scala
@@ -124,9 +113,8 @@ object evaluate:
             case f@Failure(_) => return f
         Success(result)
 
-      thunk {
+      thunk:
         doSequence
-      }
     case Loop(guard, body) =>
       def doLoop: Result =
         while true do
@@ -136,10 +124,8 @@ object evaluate:
             case f@Failure(_) => return f
         Success(Cell.NULL)
 
-      thunk {
+      thunk:
         doLoop
-      }
-  }
 
   /** Evaluates the program by recursively applying the algebra to the tree. */
   def evaluate(store: Store)(expr: Expr): Result =
