@@ -44,7 +44,7 @@ object evaluate:
   
   object Thunk:
     def thunk(computation: => Result): Thunk = Thunk(() => computation)
-    def apply = thunk _
+    def apply = thunk
   end Thunk
   
   import Thunk.thunk
@@ -62,8 +62,8 @@ object evaluate:
   /** Evaluates the two operands and applies the operator. */
   def binOp(left: Thunk, right: Thunk, op: (Int, Int) => Int): Result =
     for
-      Cell(Num(l)) <- left.eval
-      Cell(Num(r)) <- right.eval
+      case Cell(Num(l)) <- left.eval
+      case Cell(Num(r)) <- right.eval
     yield Cell(Num(op(l, r)))
 
   /**
@@ -87,7 +87,7 @@ object evaluate:
     case Mod(left, right) => thunk:
       binOp(left, right, _ % _)
     case UMinus(expr) => thunk:
-      for Cell(Num(e)) <- expr.eval yield Cell(Num(-e))
+      for case Cell(Num(e)) <- expr.eval yield Cell(Num(-e))
     case Variable(name) => thunk:
       lookup(store)(name)
     case Assign(left, right) => thunk:
@@ -120,7 +120,7 @@ object evaluate:
         while true do
           guard.eval match
             case Success(Cell.NULL) => return Success(Cell.NULL)
-            case Success(v) => body.eval
+            case Success(v) => body.eval : Unit
             case f@Failure(_) => return f
         Success(Cell.NULL)
 
